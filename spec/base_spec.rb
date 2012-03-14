@@ -160,7 +160,7 @@ describe Base do
         end
       end
     end
-    
+
     describe ".new_from_api" do
       it "should call load_from_api" do
         mock = double()
@@ -169,7 +169,10 @@ describe Base do
         Base.new_from_api({})
       end
 
-      it "should set new_record to false"
+      it "should set new_record to false" do
+        b = Base.new_from_api({})
+        b.new_record.should == false
+      end
     end
 
     describe ".load" do
@@ -179,6 +182,32 @@ describe Base do
         obj.load('fum' => 'baz')
         obj.attributes[:fum].should == 'baz'
         obj.attributes.should_not include 'foo'
+      end
+    end
+
+    # It is not new if it was loaded from the API. 
+    # If it was loaded locally but has an ID defined, but default it is not considered new either.
+    # This is to support the case where an update call is made by calling Resource.new followed by @api.save(res).
+    # For Rails, we need .new? to return false when rendering a form with an error or else the form will not have _method => PUT.
+    describe ".new?" do
+      before { @obj = Base.new }
+      subject { @obj.new? }
+      context "when called with from_api as true and without an ID" do
+        before { @obj.load({:x => 1}, true) }
+        it { should be_false }
+      end
+      context "when called with from_api as true and with an ID" do
+        before { @obj.load({:id => 1}, true) }
+        it { should be_false }
+      end
+      context "when called with from_api as false and with an ID" do
+        before { @obj.load({:id => 1}, false) }
+        it { should be_false }
+      end
+      # Only case where it is considered new by default.
+      context "when called with from_api as false and without an ID" do
+        before { @obj.load({:x => 1}, false) }
+        it { should be_true }
       end
     end
 

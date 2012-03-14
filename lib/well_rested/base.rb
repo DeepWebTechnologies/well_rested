@@ -134,8 +134,9 @@ module WellRested
       #puts "*** Warning: loading a resource without a schema (#{self.class})!" if schema.nil?
       #raise "Tried to load attributes for a resource with no schema (#{self.class})!" if schema.nil?
       
-      # By default we mark a record as new if it doesn't come from the API and it doesn't have an ID attribute.
-      self.new_record = !from_api and !attrs_to_load.include?('id')
+      # We mark a record as new if it doesn't come from the API and it doesn't have an ID.
+      self.new_record = !from_api 
+      self.new_record = false if attrs_to_load.include?(:id) or attrs_to_load.include?('id')
 
       new_attrs = {}.with_indifferent_access
 
