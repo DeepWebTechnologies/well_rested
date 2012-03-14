@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Nick Urban"]
-  s.date = "2012-03-13"
+  s.date = "2012-03-14"
   s.description = "An Active-Resource replacement that supports camel-cased APIs and HTTP caching, and avoids race conditions when changing authentication information on the fly."
   s.email = "nickurban@gmail.com"
   s.executables = ["well_rested"]
