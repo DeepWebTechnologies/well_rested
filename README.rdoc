@@ -1,0 +1,140 @@
+= well_rested
+
+WellRested (WR) is a resource-based REST-API client library for Ruby.
+
+Like ActiveResource, it supports ActiveRecord-style validations and works with Rails form helpers.
+
+WellRested was created to address some limitations in ActiveResource:
+
+- Supports transparent HTTP caching (via Rack::Cache / rest-client-components).
+- Avoids race conditions when changing HTTP authentication by specifying it on an API object rather than in the Base class.
+- Easy to override the object loading / serializing methods to modify attributes on the way in or out.
+- Handles camel-cased attribute and resource names.
+- Will not put file-extensions (e.g. .json) on the end of paths unless you tell it to.
+
+== Features to Add
+
+- XML support. Currently, only JSON is supported. 
+
+If you want to use WR, but are encountering a limitation, I encourage you to file an issue on GitHub
+or to fork your own version and send a pull request with your changes.
+
+== Installation
+
+  gem install well_rested
+
+Or, if using bundler, add the following to your Gemfile
+
+  gem 'well_rested'
+
+Then
+
+  bundle install
+
+== Sample Usage with Rails
+
+In app/models/base.rb
+
+  # It is often convenient to set your defaults in a base class.
+  class Base < WellRested::Base
+    self.protocol = 'https'
+    self.server = 'example.com:8888' 
+
+    # Send and receive request bodies in JSON. This is the default.
+    self.body_formatter = WellRested::JSONFormatter.new  
+    self.extension = '.json'  # add '.json' to the end of URLs. Default is an empty string.
+
+    # Encode multi-word attributes names into lowerCamelCase. This is the default.
+    self.attribute_formatter = WellRested::CamelCaseFormatter.new(:lower)  
+  end
+
+In app/models/my_resource.rb
+
+  class MyResource < Base
+    self.path = '/users/:user_id/my_resources'   # NOTE: Path must begin with a slash!
+
+    define_schema :id, :user_id, :name, :status => 'active'  # status defaults to 'active'
+
+    # ActiveModel validations may be applied here. 
+    # They will be checked before a save or create request is made.
+    validates :name, :length => { :maximum => 127 }, :presence => true  
+  end
+
+In app/controllers/application_controller.rb
+
+  before_filter :load_api
+
+  def load_api
+    @api = WellRested::API.new
+    # set basic auth 
+    @api.user = 'username'
+    @api.password = 'pass'
+  end
+
+In app/controllers/my_resources_controller.rb
+
+  def index
+    @my_resources = @api.find_many(MyResource, :user_id => current_user.id)
+  end
+
+  def create
+    @my_resource = MyResource.new(params[:my_resource])
+    @my_resource.user_id = current_user.id   
+
+    # If current_user.id is 22,  then this will POST to https://example.com:8888/users/22/my_resources 
+    # with a JSON payload e.g. '{"name":"My Resource","user_id":22,"status":"active"}'
+    if @api.save(@my_resource)  
+      flash[:notice] = 'Created resource!'
+      redirect_to my_resources_path
+    else
+      flash[:warning] = 'Error creating resource!'
+      render :new
+    end
+  end
+
+  def update
+    @my_resource = MyResource.new(params[:my_resource])
+
+    # Assuming @my_resource.user_id is 22 and @my_resource.id is 41
+    # If valid, PUT to https://example.com:8888/users/22/my_resources/41
+    # with a JSON payload e.g. '{"name":"My Resource","user_id":22,"status":"active","id":41}'
+    if @api.save(@my_resource)
+      flash[:notice] = 'Resource Saved!'
+      redirect_to @my_resource
+    else
+      flash[:error] 'Error saving resource!'
+      render :edit and return
+    end
+  end
+
+  def destroy
+    # If params[:id] is 41, then this will DELETE https://example.com:8888/users/22/my_resources/41
+    if @api.delete(MyResource, :user_id => current_user.id, :id => params[:id])  
+      flash[:notice] = 'Deleted resource.'
+    else
+      # If the server returns a 422 and an errors attribute containing a list of error messages, 
+      # they will automatically be added to the object's errors array.
+      flash[:error] = 'Failed to delete resource.'  
+    end
+    redirect_to my_resources_path
+  end
+
+  # etc.
+
+== Contributing to well_rested
+ 
+* Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet.
+* Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it.
+* Fork the project.
+* Start a feature/bugfix branch.
+* Commit and push until you are happy with your contribution.
+* Make sure to add tests for it. This is important so I don't break it in a future version unintentionally.
+* Please try not to mess with the Rakefile, version, or history. If you want to have your own version, or is otherwise necessary, that is fine, but please isolate to its own commit so I can cherry-pick around it.
+
+== Copyright
+
+Copyright (c) 2012 Deep Web Technologies, inc. See LICENSE.txt for further details.
+
+Written by Nick Urban. 
+
+

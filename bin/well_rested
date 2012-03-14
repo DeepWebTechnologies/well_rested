@@ -1,0 +1,27 @@
+#!/usr/bin/env ruby -w
+
+# RubyGems sets up the load path, but we're loading from the local directry too.
+$LOAD_PATH.unshift File.dirname(__FILE__) + '/../lib'
+
+require 'rubygems'
+require 'irb'
+require 'well_rested'
+
+#require File.dirname(__FILE__) + '/../spec/spec_helper'
+
+# Enable request logging.
+require 'restclient/components'
+RestClient.enable Rack::CommonLogger 
+
+# Enable request caching via HTTP rules.
+#require 'rack/cache'
+#RestClient.enable Rack::Cache 
+
+include WellRested
+
+@api = API.new
+
+puts "\nWelcome to the WellRested command-line application. A default-configure WellRested::API instance is available in @api.\n\n"
+
+IRB.start(__FILE__)
+
