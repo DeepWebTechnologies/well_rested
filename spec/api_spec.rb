@@ -501,7 +501,7 @@ describe API do
       context "when the response is an XML array" do
         before do
           FakeWeb.register_uri(:get, %r|/array\/resource$|, :body => '<?xml version="1.0" encoding="UTF-8"?><hash></hash>')
-          @response = @api.get("#{base_path}/array/resource", XMLFormatter.new)
+          #@response = @api.get("#{base_path}/array/resource", XMLFormatter.new)
         end
         it "should return an array" do
           pending
