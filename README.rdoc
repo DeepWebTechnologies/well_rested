@@ -135,6 +135,6 @@ In app/controllers/my_resources_controller.rb
 
 Copyright (c) 2012 Deep Web Technologies, inc. See LICENSE.txt for further details.
 
-Written by [Nick Urban](https://github.com/nickurban). 
+Written by {Nick Urban}[https://github.com/nickurban]. 
 
 
